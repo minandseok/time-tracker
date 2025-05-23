@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+    <title>Time Tracker</title>
+    <link
+      rel="stylesheet"
+      href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Time Tracker</h1>
+        <p class="subtitle">시간을 기록하고 관리하세요</p>
+      </header>
+
+      <main>
+        <div class="timer-section">
+          <div class="activity-input">
+            <input
+              type="text"
+              id="activityName"
+              placeholder="활동 이름 (예: 공부, 운동, 독서)" />
+          </div>
+
+          <div class="timer-display">
+            <div
+              class="time"
+              id="timerDisplay">
+              00:00:00
+            </div>
+            <div
+              class="current-activity"
+              id="currentActivity"></div>
+          </div>
+
+          <div class="timer-controls">
+            <button
+              id="startBtn"
+              class="btn btn-start">
+              시작
+            </button>
+            <button
+              id="pauseBtn"
+              class="btn btn-pause"
+              disabled>
+              일시정지
+            </button>
+            <button
+              id="resumeBtn"
+              class="btn btn-resume"
+              disabled
+              style="display: none">
+              재개
+            </button>
+            <button
+              id="stopBtn"
+              class="btn btn-stop"
+              disabled>
+              정지
+            </button>
+          </div>
+        </div>
+
+        <div class="records-section">
+          <h2>기록</h2>
+          <div
+            class="records-list"
+            id="recordsList">
+            <!-- 기록들이 여기에 동적으로 추가됩니다 -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- 삭제 확인 모달 -->
+    <div
+      class="modal-overlay"
+      id="deleteModal"
+      style="display: none">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>기록 삭제</h3>
+        </div>
+        <div class="modal-content">
+          <p>이 기록을 정말 삭제하시겠습니까?</p>
+          <div class="delete-record-info">
+            <strong id="deleteRecordName"></strong>
+            <span id="deleteRecordDuration"></span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button
+            class="btn btn-cancel"
+            id="cancelDelete">
+            취소
+          </button>
+          <button
+            class="btn btn-delete"
+            id="confirmDelete">
+            삭제
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
