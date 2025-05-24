@@ -349,17 +349,31 @@ main {
     width: 100%;
   }
 
-  .delete-btn {
+  .record-time {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  /* 모바일에서 탭했을 때만 삭제 버튼 표시 */
+  .record-item.active .delete-btn {
     opacity: 1;
     transform: scale(1);
+  }
+
+  .delete-btn {
     position: absolute;
     top: 1rem;
     right: 1rem;
   }
 
-  .record-time {
-    flex-direction: column;
-    gap: 0.25rem;
+  /* 모바일에서 기록 항목 탭 피드백 */
+  .record-item.active {
+    background: #e0f2fe;
+    border-left-color: #0284c7;
+  }
+
+  .record-item.active .record-activity {
+    color: #0284c7;
   }
 }
 
@@ -522,4 +536,44 @@ main {
 .btn-delete:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* 기록 헤더 스타일 */
+.records-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.records-header h2 {
+  margin: 0;
+}
+
+/* 전체 초기화 버튼 스타일 */
+.btn-clear-all {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: white;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  min-width: auto;
+}
+
+.btn-clear-all:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+}
+
+/* 경고 메시지 스타일 */
+.warning-message {
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+  color: #92400e;
+  font-size: 0.9rem;
+  margin-top: 1rem;
 }

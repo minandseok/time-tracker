@@ -22,6 +22,7 @@ class TimeTracker {
     this.resumeBtn = document.getElementById("resumeBtn");
     this.stopBtn = document.getElementById("stopBtn");
     this.recordsList = document.getElementById("recordsList");
+    this.clearAllBtn = document.getElementById("clearAllBtn");
 
     // 모달 관련 요소
     this.deleteModal = document.getElementById("deleteModal");
@@ -29,6 +30,11 @@ class TimeTracker {
     this.deleteRecordDuration = document.getElementById("deleteRecordDuration");
     this.cancelDeleteBtn = document.getElementById("cancelDelete");
     this.confirmDeleteBtn = document.getElementById("confirmDelete");
+
+    // 전체 초기화 모달 관련 요소
+    this.clearAllModal = document.getElementById("clearAllModal");
+    this.cancelClearAllBtn = document.getElementById("cancelClearAll");
+    this.confirmClearAllBtn = document.getElementById("confirmClearAll");
   }
 
   bindEvents() {
@@ -36,12 +42,21 @@ class TimeTracker {
     this.pauseBtn.addEventListener("click", () => this.pauseTimer());
     this.resumeBtn.addEventListener("click", () => this.resumeTimer());
     this.stopBtn.addEventListener("click", () => this.stopTimer());
+    this.clearAllBtn.addEventListener("click", () => this.openClearAllModal());
 
     // 모달 이벤트
     this.cancelDeleteBtn.addEventListener("click", () =>
       this.closeDeleteModal()
     );
     this.confirmDeleteBtn.addEventListener("click", () => this.deleteRecord());
+
+    // 전체 초기화 모달 이벤트
+    this.cancelClearAllBtn.addEventListener("click", () =>
+      this.closeClearAllModal()
+    );
+    this.confirmClearAllBtn.addEventListener("click", () =>
+      this.clearAllRecords()
+    );
 
     // 모달 오버레이 클릭시 닫기
     this.deleteModal.addEventListener("click", (e) => {
@@ -50,10 +65,21 @@ class TimeTracker {
       }
     });
 
+    this.clearAllModal.addEventListener("click", (e) => {
+      if (e.target === this.clearAllModal) {
+        this.closeClearAllModal();
+      }
+    });
+
     // ESC 키로 모달 닫기
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && this.deleteModal.style.display !== "none") {
-        this.closeDeleteModal();
+      if (e.key === "Escape") {
+        if (this.deleteModal.style.display !== "none") {
+          this.closeDeleteModal();
+        }
+        if (this.clearAllModal.style.display !== "none") {
+          this.closeClearAllModal();
+        }
       }
     });
 
@@ -66,6 +92,16 @@ class TimeTracker {
         this.activityInput.value.trim()
       ) {
         this.startTimer();
+      }
+    });
+
+    // 윈도우 리사이즈 이벤트 - 데스크톱으로 전환 시 active 클래스 제거
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 640) {
+        const recordItems = this.recordsList.querySelectorAll(".record-item");
+        recordItems.forEach((item) => {
+          item.classList.remove("active");
+        });
       }
     });
   }
@@ -246,6 +282,9 @@ class TimeTracker {
   }
 
   displayRecords() {
+    // 전체 초기화 버튼 상태 업데이트
+    this.clearAllBtn.disabled = this.records.length === 0;
+
     if (this.records.length === 0) {
       this.recordsList.innerHTML =
         '<div class="empty-state">아직 기록이 없습니다</div>';
@@ -307,6 +346,9 @@ class TimeTracker {
 
   attachDeleteEvents() {
     const deleteButtons = this.recordsList.querySelectorAll(".delete-btn");
+    const recordItems = this.recordsList.querySelectorAll(".record-item");
+
+    // 삭제 버튼 이벤트
     deleteButtons.forEach((button) => {
       button.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -316,6 +358,36 @@ class TimeTracker {
           this.openDeleteModal(record);
         }
       });
+    });
+
+    // 모바일에서 기록 항목 탭 이벤트
+    recordItems.forEach((item) => {
+      item.addEventListener("click", (e) => {
+        // 삭제 버튼을 클릭한 경우 무시
+        if (e.target.classList.contains("delete-btn")) return;
+
+        // 화면 너비가 640px 이하일 때만 작동 (모바일)
+        if (window.innerWidth <= 640) {
+          // 다른 모든 항목에서 active 클래스 제거
+          recordItems.forEach((otherItem) => {
+            if (otherItem !== item) {
+              otherItem.classList.remove("active");
+            }
+          });
+
+          // 현재 항목의 active 클래스 토글
+          item.classList.toggle("active");
+        }
+      });
+    });
+
+    // 기록 목록 외부를 클릭했을 때 모든 active 클래스 제거
+    document.addEventListener("click", (e) => {
+      if (!this.recordsList.contains(e.target)) {
+        recordItems.forEach((item) => {
+          item.classList.remove("active");
+        });
+      }
     });
   }
 
@@ -371,6 +443,21 @@ class TimeTracker {
     this.displayRecords();
     this.closeDeleteModal();
     this.recordToDelete = null;
+  }
+
+  openClearAllModal() {
+    this.clearAllModal.style.display = "block";
+  }
+
+  closeClearAllModal() {
+    this.clearAllModal.style.display = "none";
+  }
+
+  clearAllRecords() {
+    this.records = [];
+    this.saveRecords();
+    this.displayRecords();
+    this.closeClearAllModal();
   }
 }
 
