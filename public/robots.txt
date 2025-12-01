@@ -1,0 +1,10 @@
+# *
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://time-tracker.vercel.app/sitemap.xml
+
+# Disallow
+Disallow: /api/
+
