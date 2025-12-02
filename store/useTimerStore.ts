@@ -15,6 +15,7 @@ interface TimerStore {
   recordToDelete: number | null;
   showDeleteModal: boolean;
   showClearAllModal: boolean;
+  showManualAddModal: boolean;
 
   // Actions
   setCurrentActivity: (activity: string) => void;
@@ -30,6 +31,14 @@ interface TimerStore {
   closeDeleteModal: () => void;
   openClearAllModal: () => void;
   closeClearAllModal: () => void;
+  openManualAddModal: () => void;
+  closeManualAddModal: () => void;
+  addManualRecord: (
+    activity: string,
+    startTime: Date,
+    endTime: Date,
+    duration: number
+  ) => void;
 }
 
 export const useTimerStore = create<TimerStore>((set, get) => ({
@@ -43,6 +52,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   recordToDelete: null,
   showDeleteModal: false,
   showClearAllModal: false,
+  showManualAddModal: false,
 
   // Actions
   setCurrentActivity: (activity: string) => {
@@ -158,5 +168,33 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
 
   closeClearAllModal: () => {
     set({showClearAllModal: false});
+  },
+
+  openManualAddModal: () => {
+    set({showManualAddModal: true});
+  },
+
+  closeManualAddModal: () => {
+    set({showManualAddModal: false});
+  },
+
+  addManualRecord: (
+    activity: string,
+    startTime: Date,
+    endTime: Date,
+    duration: number
+  ) => {
+    const state = get();
+    const record: TimeRecord = {
+      id: Date.now(),
+      activity,
+      startTime,
+      endTime,
+      duration,
+    };
+
+    const newRecords = [record, ...state.records];
+    set({records: newRecords});
+    saveRecords(newRecords);
   },
 }));
