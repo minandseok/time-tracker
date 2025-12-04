@@ -16,6 +16,7 @@ interface TimerStore {
   showDeleteModal: boolean;
   showClearAllModal: boolean;
   showManualAddModal: boolean;
+  showSwitchModal: boolean;
 
   // Actions
   setCurrentActivity: (activity: string) => void;
@@ -39,6 +40,9 @@ interface TimerStore {
     endTime: Date,
     duration: number
   ) => void;
+  openSwitchModal: () => void;
+  closeSwitchModal: () => void;
+  switchActivity: (newActivity: string) => void;
 }
 
 export const useTimerStore = create<TimerStore>((set, get) => ({
@@ -53,6 +57,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   showDeleteModal: false,
   showClearAllModal: false,
   showManualAddModal: false,
+  showSwitchModal: false,
 
   // Actions
   setCurrentActivity: (activity: string) => {
@@ -196,5 +201,46 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
     const newRecords = [record, ...state.records];
     set({records: newRecords});
     saveRecords(newRecords);
+  },
+
+  openSwitchModal: () => {
+    set({showSwitchModal: true});
+  },
+
+  closeSwitchModal: () => {
+    set({showSwitchModal: false});
+  },
+
+  switchActivity: (newActivity: string) => {
+    const state = get();
+    if (!state.isRunning || !state.startTime) return;
+
+    const endTime = new Date();
+    const totalDuration =
+      state.pausedTime + (endTime.getTime() - state.startTime.getTime());
+
+    // 현재 활동 기록
+    if (totalDuration >= 1000) {
+      const record: TimeRecord = {
+        id: Date.now(),
+        activity: state.currentActivity,
+        startTime: new Date(endTime.getTime() - totalDuration),
+        endTime: endTime,
+        duration: totalDuration,
+      };
+
+      const newRecords = [record, ...state.records];
+      set({records: newRecords});
+      saveRecords(newRecords);
+    }
+
+    // 새 활동으로 타이머 시작
+    set({
+      isRunning: true,
+      isPaused: false,
+      startTime: new Date(),
+      pausedTime: 0,
+      currentActivity: newActivity,
+    });
   },
 }));

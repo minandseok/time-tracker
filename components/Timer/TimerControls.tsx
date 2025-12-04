@@ -11,6 +11,7 @@ export default function TimerControls() {
     pauseTimer,
     resumeTimer,
     stopTimer,
+    openSwitchModal,
   } = useTimerStore();
 
   const handleStart = () => {
@@ -34,11 +35,18 @@ export default function TimerControls() {
       )}
 
       {isRunning && (
-        <button
-          onClick={pauseTimer}
-          className={`${getButtonBaseClass()} bg-amber-600 text-white hover:-translate-y-0.5 hover:shadow-lg hover:bg-amber-700`}>
-          일시정지
-        </button>
+        <>
+          <button
+            onClick={openSwitchModal}
+            className={`${getButtonBaseClass()} bg-purple-600 text-white hover:-translate-y-0.5 hover:shadow-lg hover:bg-purple-700`}>
+            🔄 전환
+          </button>
+          <button
+            onClick={pauseTimer}
+            className={`${getButtonBaseClass()} bg-amber-600 text-white hover:-translate-y-0.5 hover:shadow-lg hover:bg-amber-700`}>
+            일시정지
+          </button>
+        </>
       )}
 
       {isPaused && (

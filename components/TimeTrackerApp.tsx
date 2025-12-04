@@ -8,6 +8,7 @@ import RecordsSection from './Records/RecordsSection';
 import DeleteModal from './Modal/DeleteModal';
 import ClearAllModal from './Modal/ClearAllModal';
 import ManualAddModal from './Modal/ManualAddModal';
+import SwitchActivityModal from './Modal/SwitchActivityModal';
 
 export default function TimeTrackerApp() {
   const loadRecordsFromStorage = useTimerStore(
@@ -32,6 +33,7 @@ export default function TimeTrackerApp() {
       <DeleteModal />
       <ClearAllModal />
       <ManualAddModal />
+      <SwitchActivityModal />
     </div>
   );
 }
