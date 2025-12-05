@@ -2,25 +2,39 @@
 
 import {useTimerStore} from '@/store/useTimerStore';
 import {formatDuration, formatTime} from '@/utils/timeFormat';
+import {useState} from 'react';
 
 export default function RecordsList() {
   const {records, openDeleteModal} = useTimerStore();
+  const [copied, setCopied] = useState(false);
 
-  const copyTableToClipboard = () => {
-    const markdownTable = [
-      '| 번호 | 프로젝트 이름 | 시간 범위 | 걸린 시간 |',
-      '|------|-------------|----------|----------|',
-      ...records.map((record, index) => {
-        const timeRange = `${formatTime(record.startTime)} - ${formatTime(
-          record.endTime
-        )}`;
-        return `| ${index + 1} | ${
-          record.activity
-        } | ${timeRange} | ${formatDuration(record.duration)} |`;
-      }),
-    ].join('\n');
+  const copyTableToClipboard = async () => {
+    if (typeof window === 'undefined' || !navigator?.clipboard) {
+      alert('복사 기능을 사용할 수 없습니다.');
+      return;
+    }
 
-    navigator.clipboard.writeText(markdownTable);
+    try {
+      const markdownTable = [
+        '| 번호 | 프로젝트 이름 | 시간 범위 | 걸린 시간 |',
+        '|------|-------------|----------|----------|',
+        ...records.map((record, index) => {
+          const timeRange = `${formatTime(record.startTime)} - ${formatTime(
+            record.endTime
+          )}`;
+          return `| ${index + 1} | ${
+            record.activity
+          } | ${timeRange} | ${formatDuration(record.duration)} |`;
+        }),
+      ].join('\n');
+
+      await navigator.clipboard.writeText(markdownTable);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('복사 실패:', err);
+      alert('복사에 실패했습니다.');
+    }
   };
 
   if (records.length === 0) {
@@ -32,22 +46,47 @@ export default function RecordsList() {
   }
 
   const totalTime = records.reduce((sum, record) => sum + record.duration, 0);
+  const miscRecords = records.filter(
+    (record) => record.activity === '잡동사니'
+  );
+  const miscTime = miscRecords.reduce(
+    (sum, record) => sum + record.duration,
+    0
+  );
 
   return (
     <div className='flex flex-col h-full'>
-      <div className='mb-4 flex justify-between items-center flex-shrink-0'>
-        <div className='text-sm text-gray-600'>
-          총{' '}
-          <span className='font-bold text-blue-600'>
-            {formatDuration(totalTime)}
-          </span>{' '}
-          ({records.length}개)
+      <div className='mb-4 flex justify-between items-center shrink-0 gap-3'>
+        <div className='flex items-center gap-3 text-sm flex-wrap'>
+          <div className='text-gray-600'>
+            총{' '}
+            <span className='font-bold text-blue-600'>
+              {formatDuration(totalTime)}
+            </span>{' '}
+            ({records.length}개)
+          </div>
+          {miscTime > 0 && (
+            <>
+              <span className='text-gray-300'>|</span>
+              <div className='text-gray-600'>
+                잡동사니{' '}
+                <span className='font-bold text-gray-600'>
+                  {formatDuration(miscTime)}
+                </span>{' '}
+                ({miscRecords.length}개)
+              </div>
+            </>
+          )}
         </div>
         <button
           onClick={copyTableToClipboard}
-          className='bg-blue-600 text-white text-sm px-3 py-1.5 rounded-lg border-none cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:bg-blue-700'
+          className={`text-white text-sm px-3 py-1.5 rounded-lg border-none cursor-pointer transition-all duration-300 shrink-0 ${
+            copied
+              ? 'bg-green-600 hover:bg-green-700'
+              : 'bg-blue-600 hover:-translate-y-0.5 hover:shadow-lg hover:bg-blue-700'
+          }`}
           title='표 복사'>
-          📋 복사
+          {copied ? '✓ 복사됨' : '📋 복사'}
         </button>
       </div>
       <div className='flex-1 overflow-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 scrollbar-thumb-rounded'>
