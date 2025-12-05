@@ -185,7 +185,6 @@ export default function TimelineView() {
                   className='relative group rounded transition-all duration-200'
                   style={{
                     backgroundColor: recordData.color,
-                    gridColumn: `span ${CELLS_PER_ROW}`, // Span entire row
                     opacity: isDimmed ? 0.2 : 1,
                     boxShadow: isSelected
                       ? '0 0 0 3px rgba(59, 130, 246, 0.8)'
@@ -214,7 +213,6 @@ export default function TimelineView() {
                   className='relative group rounded transition-all duration-200'
                   style={{
                     backgroundColor: recordData.color,
-                    gridColumn: `span 30`,
                     opacity: isDimmed ? 0.2 : 0.9,
                     boxShadow: isSelected
                       ? '0 0 0 3px rgba(59, 130, 246, 0.8)'
@@ -243,7 +241,6 @@ export default function TimelineView() {
                   className='relative group rounded transition-all duration-200'
                   style={{
                     backgroundColor: recordData.color,
-                    gridColumn: `span 15`,
                     opacity: isDimmed ? 0.2 : 0.8,
                     boxShadow: isSelected
                       ? '0 0 0 3px rgba(59, 130, 246, 0.8)'
@@ -272,7 +269,6 @@ export default function TimelineView() {
                   className='relative group rounded transition-all duration-200'
                   style={{
                     backgroundColor: recordData.color,
-                    gridColumn: 'span 1',
                     opacity: isDimmed ? 0.2 : 0.7,
                     boxShadow: isSelected
                       ? '0 0 0 3px rgba(59, 130, 246, 0.8)'
@@ -301,7 +297,6 @@ export default function TimelineView() {
                   className='relative group rounded transition-all duration-200'
                   style={{
                     backgroundColor: recordData.color,
-                    gridColumn: 'span 1',
                     opacity: isDimmed ? 0.2 : 0.5,
                     boxShadow: isSelected
                       ? '0 0 0 3px rgba(59, 130, 246, 0.8)'
@@ -330,7 +325,6 @@ export default function TimelineView() {
                   className='relative group rounded transition-all duration-200'
                   style={{
                     backgroundColor: recordData.color,
-                    gridColumn: 'span 1',
                     opacity: isDimmed ? 0.2 : 0.4,
                     boxShadow: isSelected
                       ? '0 0 0 3px rgba(59, 130, 246, 0.8)'
