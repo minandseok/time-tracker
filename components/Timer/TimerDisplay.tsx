@@ -5,18 +5,11 @@ import {formatDuration} from '@/utils/timeFormat';
 import {useEffect, useState} from 'react';
 
 export default function TimerDisplay() {
-  const {isRunning, startTime, pausedTime} = useTimerStore();
+  const {isRunning, isPaused, startTime, pausedTime} = useTimerStore();
   const [displayTime, setDisplayTime] = useState('00:00:00');
 
   useEffect(() => {
-    if (!isRunning) {
-      if (pausedTime > 0) {
-        setDisplayTime(formatDuration(pausedTime));
-      } else {
-        setDisplayTime('00:00:00');
-      }
-      return;
-    }
+    if (!isRunning) return;
 
     const updateDisplay = () => {
       if (startTime) {
@@ -28,14 +21,19 @@ export default function TimerDisplay() {
 
     updateDisplay();
     const interval = setInterval(updateDisplay, 1000);
-
     return () => clearInterval(interval);
   }, [isRunning, startTime, pausedTime]);
+
+  // Display time for stopped/paused state
+  const staticDisplayTime =
+    isPaused && pausedTime > 0 ? formatDuration(pausedTime) : '00:00:00';
+
+  const finalDisplayTime = isRunning ? displayTime : staticDisplayTime;
 
   return (
     <div className='text-center my-8'>
       <div className='text-[3.5rem] font-light text-gray-800 mb-2 tracking-tighter tabular-nums'>
-        {displayTime}
+        {finalDisplayTime}
       </div>
     </div>
   );

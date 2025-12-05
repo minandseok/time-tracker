@@ -13,7 +13,7 @@ export default function SwitchActivityModal() {
 
   const handleSwitch = () => {
     if (!newActivity.trim()) {
-      setError('새 프로젝트 이름을 입력해주세요.');
+      setError('새 활동 이름을 입력해주세요.');
       return;
     }
 
@@ -64,7 +64,7 @@ export default function SwitchActivityModal() {
 
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-2'>
-              새 프로젝트 이름
+              새 활동 이름
             </label>
             <input
               type='text'

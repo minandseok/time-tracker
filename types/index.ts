@@ -6,13 +6,18 @@ export interface TimeRecord {
   duration: number;
 }
 
-export interface TimerState {
-  isRunning: boolean;
-  isPaused: boolean;
-  startTime: Date | null;
-  pausedTime: number;
-  currentActivity: string;
-  records: TimeRecord[];
+export interface TimeStats {
+  totalTime: number;
+  totalCount: number;
+  miscTime: number;
+  miscCount: number;
+  focusTime: number;
+  focusCount: number;
 }
 
-export type TimerStatus = 'idle' | 'running' | 'paused';
+export interface ActivityStats {
+  name: string;
+  duration: number;
+  count: number;
+  percentage: number;
+}

@@ -3,6 +3,37 @@
 import {create} from 'zustand';
 import {TimeRecord} from '@/types';
 import {saveRecords, loadRecords} from '@/utils/storage';
+import {MISC_ACTIVITY, MIN_DURATION_MS} from '@/utils/statistics';
+
+// Helper functions
+const calculateDuration = (
+  startTime: Date,
+  pausedTime: number,
+  isRunning: boolean
+): number => {
+  if (isRunning) {
+    return pausedTime + (new Date().getTime() - startTime.getTime());
+  }
+  return pausedTime;
+};
+
+const createRecord = (
+  activity: string,
+  duration: number,
+  endTime: Date = new Date()
+): TimeRecord => ({
+  id: Date.now(),
+  activity,
+  startTime: new Date(endTime.getTime() - duration),
+  endTime,
+  duration,
+});
+
+const saveRecord = (record: TimeRecord, existingRecords: TimeRecord[]) => {
+  const newRecords = [record, ...existingRecords];
+  saveRecords(newRecords);
+  return newRecords;
+};
 
 interface TimerStore {
   // State
@@ -12,11 +43,14 @@ interface TimerStore {
   pausedTime: number;
   currentActivity: string;
   records: TimeRecord[];
+  isMiscRunning: boolean;
+  miscStartTime: Date | null;
+  miscEnabled: boolean;
   recordToDelete: number | null;
   showDeleteModal: boolean;
   showClearAllModal: boolean;
-  showManualAddModal: boolean;
   showSwitchModal: boolean;
+  showMiscStopModal: boolean;
 
   // Actions
   setCurrentActivity: (activity: string) => void;
@@ -32,18 +66,13 @@ interface TimerStore {
   closeDeleteModal: () => void;
   openClearAllModal: () => void;
   closeClearAllModal: () => void;
-  openManualAddModal: () => void;
-  closeManualAddModal: () => void;
-  addManualRecord: (
-    activity: string,
-    startTime: Date,
-    endTime: Date,
-    duration: number
-  ) => void;
   openSwitchModal: () => void;
   closeSwitchModal: () => void;
   switchActivity: (newActivity: string) => void;
   startMiscActivity: () => void;
+  openMiscStopModal: () => void;
+  closeMiscStopModal: () => void;
+  confirmMiscStop: () => void;
 }
 
 export const useTimerStore = create<TimerStore>((set, get) => ({
@@ -57,8 +86,11 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   recordToDelete: null,
   showDeleteModal: false,
   showClearAllModal: false,
-  showManualAddModal: false,
   showSwitchModal: false,
+  showMiscStopModal: false,
+  isMiscRunning: false,
+  miscStartTime: null,
+  miscEnabled: false,
 
   // Actions
   setCurrentActivity: (activity: string) => {
@@ -66,12 +98,26 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   },
 
   startTimer: (activity: string) => {
+    const state = get();
+    const now = new Date();
+
+    // Stop and record miscellaneous time if running
+    if (state.isMiscRunning && state.miscStartTime) {
+      const miscDuration = now.getTime() - state.miscStartTime.getTime();
+      if (miscDuration >= MIN_DURATION_MS) {
+        const miscRecord = createRecord(MISC_ACTIVITY, miscDuration, now);
+        set({records: saveRecord(miscRecord, state.records)});
+      }
+    }
+
     set({
       isRunning: true,
       isPaused: false,
-      startTime: new Date(),
+      startTime: now,
       pausedTime: 0,
       currentActivity: activity,
+      isMiscRunning: false,
+      miscStartTime: null,
     });
   },
 
@@ -79,12 +125,30 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
     const state = get();
     if (!state.isRunning || state.isPaused || !state.startTime) return;
 
-    const newPausedTime =
-      state.pausedTime + (new Date().getTime() - state.startTime.getTime());
+    const now = new Date();
+    const totalDuration = calculateDuration(
+      state.startTime,
+      state.pausedTime,
+      true
+    );
+
+    // Record current activity before pausing
+    let updatedRecords = state.records;
+    if (totalDuration >= MIN_DURATION_MS) {
+      const record = createRecord(state.currentActivity, totalDuration, now);
+      updatedRecords = saveRecord(record, updatedRecords);
+    }
+
+    // Start miscellaneous time if mode is enabled
+    const shouldStartMisc = state.miscEnabled;
+
     set({
+      records: updatedRecords,
       isPaused: true,
       isRunning: false,
-      pausedTime: newPausedTime,
+      pausedTime: 0, // Reset for new record when resumed
+      isMiscRunning: shouldStartMisc,
+      miscStartTime: shouldStartMisc ? now : null,
     });
   },
 
@@ -92,43 +156,53 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
     const state = get();
     if (!state.isPaused) return;
 
+    const now = new Date();
+
+    // Record miscellaneous time when resuming (pause ~ resume)
+    let updatedRecords = state.records;
+    if (state.isMiscRunning && state.miscStartTime) {
+      const miscDuration = now.getTime() - state.miscStartTime.getTime();
+      if (miscDuration >= MIN_DURATION_MS) {
+        const miscRecord = createRecord(MISC_ACTIVITY, miscDuration, now);
+        updatedRecords = saveRecord(miscRecord, updatedRecords);
+      }
+    }
+
+    // Resume activity with new record (pausedTime is already 0)
     set({
+      records: updatedRecords,
       isRunning: true,
       isPaused: false,
-      startTime: new Date(),
+      startTime: now,
+      pausedTime: 0, // Start fresh for new record
+      isMiscRunning: false,
+      miscStartTime: null,
     });
   },
 
   stopTimer: () => {
     const state = get();
-    if (!state.isRunning && !state.isPaused) return;
+    if (!state.isRunning || !state.startTime) return;
 
-    const endTime = new Date();
-    let totalDuration: number;
+    const now = new Date();
+    const totalDuration = calculateDuration(
+      state.startTime,
+      state.pausedTime,
+      true
+    );
 
-    if (state.isRunning && state.startTime) {
-      totalDuration =
-        state.pausedTime + (endTime.getTime() - state.startTime.getTime());
-    } else {
-      totalDuration = state.pausedTime;
+    if (totalDuration >= MIN_DURATION_MS) {
+      const record = createRecord(state.currentActivity, totalDuration, now);
+      set({records: saveRecord(record, state.records)});
     }
 
-    // Only save if duration is at least 1 second
-    if (totalDuration >= 1000) {
-      const record: TimeRecord = {
-        id: Date.now(),
-        activity: state.currentActivity,
-        startTime: new Date(endTime.getTime() - totalDuration),
-        endTime: endTime,
-        duration: totalDuration,
-      };
-
-      const newRecords = [record, ...state.records];
-      set({records: newRecords});
-      saveRecords(newRecords);
-    }
-
+    const wasMiscEnabled = state.miscEnabled;
     get().resetTimer();
+
+    // Start miscellaneous time if mode is enabled
+    if (wasMiscEnabled) {
+      set({isMiscRunning: true, miscStartTime: now});
+    }
   },
 
   resetTimer: () => {
@@ -142,8 +216,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   },
 
   deleteRecord: (id: number) => {
-    const state = get();
-    const newRecords = state.records.filter((record) => record.id !== id);
+    const newRecords = get().records.filter((r) => r.id !== id);
     set({records: newRecords});
     saveRecords(newRecords);
     get().closeDeleteModal();
@@ -155,127 +228,141 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
     get().closeClearAllModal();
   },
 
-  loadRecordsFromStorage: () => {
-    const records = loadRecords();
-    set({records});
-  },
+  loadRecordsFromStorage: () => set({records: loadRecords()}),
 
-  openDeleteModal: (id: number) => {
-    set({recordToDelete: id, showDeleteModal: true});
-  },
+  openDeleteModal: (id: number) =>
+    set({recordToDelete: id, showDeleteModal: true}),
+  closeDeleteModal: () => set({recordToDelete: null, showDeleteModal: false}),
+  openClearAllModal: () => set({showClearAllModal: true}),
+  closeClearAllModal: () => set({showClearAllModal: false}),
 
-  closeDeleteModal: () => {
-    set({recordToDelete: null, showDeleteModal: false});
-  },
-
-  openClearAllModal: () => {
-    set({showClearAllModal: true});
-  },
-
-  closeClearAllModal: () => {
-    set({showClearAllModal: false});
-  },
-
-  openManualAddModal: () => {
-    set({showManualAddModal: true});
-  },
-
-  closeManualAddModal: () => {
-    set({showManualAddModal: false});
-  },
-
-  addManualRecord: (
-    activity: string,
-    startTime: Date,
-    endTime: Date,
-    duration: number
-  ) => {
-    const state = get();
-    const record: TimeRecord = {
-      id: Date.now(),
-      activity,
-      startTime,
-      endTime,
-      duration,
-    };
-
-    const newRecords = [record, ...state.records];
-    set({records: newRecords});
-    saveRecords(newRecords);
-  },
-
-  openSwitchModal: () => {
-    set({showSwitchModal: true});
-  },
-
-  closeSwitchModal: () => {
-    set({showSwitchModal: false});
-  },
+  openSwitchModal: () => set({showSwitchModal: true}),
+  closeSwitchModal: () => set({showSwitchModal: false}),
 
   switchActivity: (newActivity: string) => {
     const state = get();
     if (!state.isRunning || !state.startTime) return;
 
-    const endTime = new Date();
-    const totalDuration =
-      state.pausedTime + (endTime.getTime() - state.startTime.getTime());
+    const now = new Date();
+    const totalDuration = calculateDuration(
+      state.startTime,
+      state.pausedTime,
+      true
+    );
 
-    // 현재 활동 기록
-    if (totalDuration >= 1000) {
-      const record: TimeRecord = {
-        id: Date.now(),
-        activity: state.currentActivity,
-        startTime: new Date(endTime.getTime() - totalDuration),
-        endTime: endTime,
-        duration: totalDuration,
-      };
-
-      const newRecords = [record, ...state.records];
-      set({records: newRecords});
-      saveRecords(newRecords);
+    // Record current activity
+    if (totalDuration >= MIN_DURATION_MS) {
+      const record = createRecord(state.currentActivity, totalDuration, now);
+      set({records: saveRecord(record, state.records)});
     }
 
-    // 새 활동으로 타이머 시작
+    // Stop and record miscellaneous time if running
+    if (state.isMiscRunning && state.miscStartTime) {
+      const miscDuration = now.getTime() - state.miscStartTime.getTime();
+      if (miscDuration >= MIN_DURATION_MS) {
+        const miscRecord = {
+          ...createRecord(MISC_ACTIVITY, miscDuration, now),
+          id: Date.now() + 1,
+        };
+        set({records: saveRecord(miscRecord, get().records)});
+      }
+    }
+
+    // Start timer with new activity
     set({
       isRunning: true,
       isPaused: false,
-      startTime: new Date(),
+      startTime: now,
       pausedTime: 0,
       currentActivity: newActivity,
+      isMiscRunning: false,
+      miscStartTime: null,
     });
   },
 
   startMiscActivity: () => {
     const state = get();
+    if (state.miscEnabled) {
+      set({showMiscStopModal: true});
+      return;
+    }
 
-    // 현재 진행 중인 활동이 있으면 먼저 기록
-    if (state.isRunning && state.startTime) {
-      const endTime = new Date();
-      const totalDuration =
-        state.pausedTime + (endTime.getTime() - state.startTime.getTime());
+    const now = new Date();
+    set({miscEnabled: true});
 
-      if (totalDuration >= 1000) {
-        const record: TimeRecord = {
-          id: Date.now(),
-          activity: state.currentActivity,
-          startTime: new Date(endTime.getTime() - totalDuration),
-          endTime: endTime,
-          duration: totalDuration,
-        };
+    // Record and stop current activity if running
+    if ((state.isRunning || state.isPaused) && state.startTime) {
+      const totalDuration = calculateDuration(
+        state.startTime,
+        state.pausedTime,
+        state.isRunning
+      );
 
-        const newRecords = [record, ...state.records];
-        set({records: newRecords});
-        saveRecords(newRecords);
+      if (totalDuration >= MIN_DURATION_MS) {
+        const record = createRecord(state.currentActivity, totalDuration, now);
+        set({records: saveRecord(record, state.records)});
+      }
+
+      // Reset activity state
+      set({
+        isRunning: false,
+        isPaused: false,
+        startTime: null,
+        pausedTime: 0,
+        currentActivity: '',
+      });
+    }
+
+    // Start miscellaneous time
+    set({isMiscRunning: true, miscStartTime: now});
+  },
+
+  openMiscStopModal: () => set({showMiscStopModal: true}),
+  closeMiscStopModal: () => set({showMiscStopModal: false}),
+
+  confirmMiscStop: () => {
+    const state = get();
+    const now = new Date();
+    let updatedRecords = state.records;
+
+    // Record current activity if running
+    if ((state.isRunning || state.isPaused) && state.startTime) {
+      const totalDuration = calculateDuration(
+        state.startTime,
+        state.pausedTime,
+        state.isRunning
+      );
+
+      if (totalDuration >= MIN_DURATION_MS) {
+        const record = createRecord(state.currentActivity, totalDuration, now);
+        updatedRecords = saveRecord(record, updatedRecords);
       }
     }
 
-    // 잡동사니 타이머 시작
+    // Record miscellaneous time if running
+    if (state.isMiscRunning && state.miscStartTime) {
+      const miscDuration = now.getTime() - state.miscStartTime.getTime();
+      if (miscDuration >= MIN_DURATION_MS) {
+        const miscRecord = {
+          ...createRecord(MISC_ACTIVITY, miscDuration, now),
+          id: Date.now() + 1,
+        };
+        updatedRecords = saveRecord(miscRecord, updatedRecords);
+      }
+    }
+
+    // Reset all state
     set({
-      isRunning: true,
+      records: updatedRecords,
+      isRunning: false,
       isPaused: false,
-      startTime: new Date(),
+      startTime: null,
       pausedTime: 0,
-      currentActivity: '잡동사니',
+      currentActivity: '',
+      miscEnabled: false,
+      isMiscRunning: false,
+      miscStartTime: null,
+      showMiscStopModal: false,
     });
   },
 }));
