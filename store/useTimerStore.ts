@@ -43,6 +43,7 @@ interface TimerStore {
   openSwitchModal: () => void;
   closeSwitchModal: () => void;
   switchActivity: (newActivity: string) => void;
+  startMiscActivity: () => void;
 }
 
 export const useTimerStore = create<TimerStore>((set, get) => ({
@@ -241,6 +242,40 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       startTime: new Date(),
       pausedTime: 0,
       currentActivity: newActivity,
+    });
+  },
+
+  startMiscActivity: () => {
+    const state = get();
+
+    // 현재 진행 중인 활동이 있으면 먼저 기록
+    if (state.isRunning && state.startTime) {
+      const endTime = new Date();
+      const totalDuration =
+        state.pausedTime + (endTime.getTime() - state.startTime.getTime());
+
+      if (totalDuration >= 1000) {
+        const record: TimeRecord = {
+          id: Date.now(),
+          activity: state.currentActivity,
+          startTime: new Date(endTime.getTime() - totalDuration),
+          endTime: endTime,
+          duration: totalDuration,
+        };
+
+        const newRecords = [record, ...state.records];
+        set({records: newRecords});
+        saveRecords(newRecords);
+      }
+    }
+
+    // 잡동사니 타이머 시작
+    set({
+      isRunning: true,
+      isPaused: false,
+      startTime: new Date(),
+      pausedTime: 0,
+      currentActivity: '잡동사니',
     });
   },
 }));
