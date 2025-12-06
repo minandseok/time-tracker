@@ -17,7 +17,6 @@ export default function ActivityInput() {
 
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [preventAutoOpen, setPreventAutoOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
@@ -123,7 +122,7 @@ export default function ActivityInput() {
   };
 
   const handleFocus = () => {
-    if (activities.length > 0 && !preventAutoOpen) {
+    if (activities.length > 0) {
       setShowSuggestions(true);
     }
   };

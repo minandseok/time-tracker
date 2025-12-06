@@ -15,7 +15,7 @@ export function loadRecords(): TimeRecord[] {
     if (saved) {
       const parsed = JSON.parse(saved);
       // Convert date strings back to Date objects
-      return parsed.map((record: TimeRecord) => ({
+      return parsed.map((record: any) => ({
         ...record,
         startTime: new Date(record.startTime),
         endTime: new Date(record.endTime),
