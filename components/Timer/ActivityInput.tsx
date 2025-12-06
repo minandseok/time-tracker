@@ -17,6 +17,7 @@ export default function ActivityInput() {
 
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [preventAutoOpen, setPreventAutoOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
@@ -52,6 +53,18 @@ export default function ActivityInput() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Prevent auto-open when timer stops (record button clicked)
+  const prevIsRunningRef = useRef(isRunning);
+  useEffect(() => {
+    if (prevIsRunningRef.current && !isRunning) {
+      // Timer just stopped - prevent auto-open for a moment
+      setPreventAutoOpen(true);
+      const timeout = setTimeout(() => setPreventAutoOpen(false), 500);
+      return () => clearTimeout(timeout);
+    }
+    prevIsRunningRef.current = isRunning;
+  }, [isRunning]);
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!showSuggestions || filteredSuggestions.length === 0) {
@@ -122,7 +135,7 @@ export default function ActivityInput() {
   };
 
   const handleFocus = () => {
-    if (activities.length > 0) {
+    if (activities.length > 0 && !preventAutoOpen) {
       setShowSuggestions(true);
     }
   };

@@ -15,10 +15,14 @@ export default function TimeTrackerApp() {
   const loadRecordsFromStorage = useTimerStore(
     (state) => state.loadRecordsFromStorage
   );
+  const loadTimerStateFromStorage = useTimerStore(
+    (state) => state.loadTimerStateFromStorage
+  );
 
   useEffect(() => {
     loadRecordsFromStorage();
-  }, [loadRecordsFromStorage]);
+    loadTimerStateFromStorage();
+  }, [loadRecordsFromStorage, loadTimerStateFromStorage]);
 
   return (
     <div className='max-w-[1400px] mx-auto p-8'>

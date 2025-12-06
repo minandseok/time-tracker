@@ -2,7 +2,7 @@
 
 import {create} from 'zustand';
 import {TimeRecord} from '@/types';
-import {saveRecords, loadRecords} from '@/utils/storage';
+import {saveRecords, loadRecords, saveTimerState, loadTimerState} from '@/utils/storage';
 import {MISC_ACTIVITY, MIN_DURATION_MS} from '@/utils/statistics';
 
 // Helper functions
@@ -62,6 +62,7 @@ interface TimerStore {
   deleteRecord: (id: number) => void;
   clearAllRecords: () => void;
   loadRecordsFromStorage: () => void;
+  loadTimerStateFromStorage: () => void;
   openDeleteModal: (id: number) => void;
   closeDeleteModal: () => void;
   openClearAllModal: () => void;
@@ -74,6 +75,20 @@ interface TimerStore {
   closeMiscStopModal: () => void;
   confirmMiscStop: () => void;
 }
+
+// Helper function to persist timer state
+const persistTimerState = (state: TimerStore) => {
+  saveTimerState({
+    isRunning: state.isRunning,
+    isPaused: state.isPaused,
+    startTime: state.startTime,
+    pausedTime: state.pausedTime,
+    currentActivity: state.currentActivity,
+    isMiscRunning: state.isMiscRunning,
+    miscStartTime: state.miscStartTime,
+    miscEnabled: state.miscEnabled,
+  });
+};
 
 export const useTimerStore = create<TimerStore>((set, get) => ({
   // Initial state
@@ -95,6 +110,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   // Actions
   setCurrentActivity: (activity: string) => {
     set({currentActivity: activity});
+    persistTimerState({...get(), currentActivity: activity});
   },
 
   startTimer: (activity: string) => {
@@ -119,6 +135,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       isMiscRunning: false,
       miscStartTime: null,
     });
+    persistTimerState(get());
   },
 
   pauseTimer: () => {
@@ -150,6 +167,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       isMiscRunning: shouldStartMisc,
       miscStartTime: shouldStartMisc ? now : null,
     });
+    persistTimerState(get());
   },
 
   resumeTimer: () => {
@@ -178,6 +196,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       isMiscRunning: false,
       miscStartTime: null,
     });
+    persistTimerState(get());
   },
 
   stopTimer: () => {
@@ -202,6 +221,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
     // Start miscellaneous time if mode is enabled
     if (wasMiscEnabled) {
       set({isMiscRunning: true, miscStartTime: now});
+      persistTimerState(get());
     }
   },
 
@@ -213,6 +233,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       pausedTime: 0,
       currentActivity: '',
     });
+    persistTimerState(get());
   },
 
   deleteRecord: (id: number) => {
@@ -229,6 +250,22 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   },
 
   loadRecordsFromStorage: () => set({records: loadRecords()}),
+
+  loadTimerStateFromStorage: () => {
+    const timerState = loadTimerState();
+    if (timerState) {
+      set({
+        isRunning: timerState.isRunning,
+        isPaused: timerState.isPaused,
+        startTime: timerState.startTime,
+        pausedTime: timerState.pausedTime,
+        currentActivity: timerState.currentActivity,
+        isMiscRunning: timerState.isMiscRunning,
+        miscStartTime: timerState.miscStartTime,
+        miscEnabled: timerState.miscEnabled,
+      });
+    }
+  },
 
   openDeleteModal: (id: number) =>
     set({recordToDelete: id, showDeleteModal: true}),
@@ -278,6 +315,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       isMiscRunning: false,
       miscStartTime: null,
     });
+    persistTimerState(get());
   },
 
   startMiscActivity: () => {
@@ -315,6 +353,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
 
     // Start miscellaneous time
     set({isMiscRunning: true, miscStartTime: now});
+    persistTimerState(get());
   },
 
   openMiscStopModal: () => set({showMiscStopModal: true}),
@@ -364,5 +403,6 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       miscStartTime: null,
       showMiscStopModal: false,
     });
+    persistTimerState(get());
   },
 }));
