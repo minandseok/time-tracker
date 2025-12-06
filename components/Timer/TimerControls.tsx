@@ -43,7 +43,7 @@ export default function TimerControls() {
             onClick={openSwitchModal}
             disabled={!miscEnabled}
             className={`${getButtonBaseClass()} bg-purple-600 text-white hover:enabled:-translate-y-0.5 hover:enabled:shadow-lg hover:enabled:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed`}>
-            전환
+            🔄 전환
           </button>
           <button
             onClick={pauseTimer}

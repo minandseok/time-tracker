@@ -5,7 +5,7 @@ export default function Header() {
         Time Tracker
       </h1>
       <p className='text-lg font-light text-gray-600'>
-        하루의 시간을 기록하고 관리하세요
+        시간을 기록하고 관리하세요
       </p>
     </header>
   );
