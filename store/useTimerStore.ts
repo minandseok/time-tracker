@@ -2,7 +2,12 @@
 
 import {create} from 'zustand';
 import {TimeRecord} from '@/types';
-import {saveRecords, loadRecords} from '@/utils/storage';
+import {
+  saveRecords,
+  loadRecords,
+  saveTimerState,
+  loadTimerState,
+} from '@/utils/storage';
 import {MISC_ACTIVITY, MIN_DURATION_MS} from '@/utils/statistics';
 
 // Helper functions
@@ -75,26 +80,53 @@ interface TimerStore {
   confirmMiscStop: () => void;
 }
 
+// Load initial state from storage
+const loadInitialState = () => {
+  const savedState = loadTimerState();
+  if (savedState) {
+    return {
+      isRunning: savedState.isRunning,
+      isPaused: savedState.isPaused,
+      startTime: savedState.startTime ? new Date(savedState.startTime) : null,
+      pausedTime: savedState.pausedTime || 0,
+      currentActivity: savedState.currentActivity || '',
+      isMiscRunning: savedState.isMiscRunning || false,
+      miscStartTime: savedState.miscStartTime
+        ? new Date(savedState.miscStartTime)
+        : null,
+      miscEnabled: savedState.miscEnabled || false,
+    };
+  }
+  return {
+    isRunning: false,
+    isPaused: false,
+    startTime: null,
+    pausedTime: 0,
+    currentActivity: '',
+    isMiscRunning: false,
+    miscStartTime: null,
+    miscEnabled: false,
+  };
+};
+
+const initialState = loadInitialState();
+
 export const useTimerStore = create<TimerStore>((set, get) => ({
   // Initial state
-  isRunning: false,
-  isPaused: false,
-  startTime: null,
-  pausedTime: 0,
-  currentActivity: '',
+  ...initialState,
   records: [],
   recordToDelete: null,
   showDeleteModal: false,
   showClearAllModal: false,
   showSwitchModal: false,
   showMiscStopModal: false,
-  isMiscRunning: false,
-  miscStartTime: null,
-  miscEnabled: false,
 
   // Actions
   setCurrentActivity: (activity: string) => {
     set({currentActivity: activity});
+    saveTimerState({
+      currentActivity: activity,
+    });
   },
 
   startTimer: (activity: string) => {
@@ -114,6 +146,15 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       isRunning: true,
       isPaused: false,
       startTime: now,
+      pausedTime: 0,
+      currentActivity: activity,
+      isMiscRunning: false,
+      miscStartTime: null,
+    });
+    saveTimerState({
+      isRunning: true,
+      isPaused: false,
+      startTime: now.toISOString(),
       pausedTime: 0,
       currentActivity: activity,
       isMiscRunning: false,
@@ -150,6 +191,13 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       isMiscRunning: shouldStartMisc,
       miscStartTime: shouldStartMisc ? now : null,
     });
+    saveTimerState({
+      isPaused: true,
+      isRunning: false,
+      pausedTime: 0,
+      isMiscRunning: shouldStartMisc,
+      miscStartTime: shouldStartMisc ? now.toISOString() : null,
+    });
   },
 
   resumeTimer: () => {
@@ -178,6 +226,14 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       isMiscRunning: false,
       miscStartTime: null,
     });
+    saveTimerState({
+      isRunning: true,
+      isPaused: false,
+      startTime: now.toISOString(),
+      pausedTime: 0,
+      isMiscRunning: false,
+      miscStartTime: null,
+    });
   },
 
   stopTimer: () => {
@@ -202,11 +258,27 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
     // Start miscellaneous time if mode is enabled
     if (wasMiscEnabled) {
       set({isMiscRunning: true, miscStartTime: now});
+      saveTimerState({
+        isMiscRunning: true,
+        miscStartTime: now.toISOString(),
+      });
+    } else {
+      saveTimerState({
+        isMiscRunning: false,
+        miscStartTime: null,
+      });
     }
   },
 
   resetTimer: () => {
     set({
+      isRunning: false,
+      isPaused: false,
+      startTime: null,
+      pausedTime: 0,
+      currentActivity: '',
+    });
+    saveTimerState({
       isRunning: false,
       isPaused: false,
       startTime: null,
@@ -278,6 +350,15 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       isMiscRunning: false,
       miscStartTime: null,
     });
+    saveTimerState({
+      isRunning: true,
+      isPaused: false,
+      startTime: now.toISOString(),
+      pausedTime: 0,
+      currentActivity: newActivity,
+      isMiscRunning: false,
+      miscStartTime: null,
+    });
   },
 
   startMiscActivity: () => {
@@ -311,10 +392,22 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
         pausedTime: 0,
         currentActivity: '',
       });
+      saveTimerState({
+        isRunning: false,
+        isPaused: false,
+        startTime: null,
+        pausedTime: 0,
+        currentActivity: '',
+      });
     }
 
     // Start miscellaneous time
     set({isMiscRunning: true, miscStartTime: now});
+    saveTimerState({
+      miscEnabled: true,
+      isMiscRunning: true,
+      miscStartTime: now.toISOString(),
+    });
   },
 
   openMiscStopModal: () => set({showMiscStopModal: true}),
@@ -363,6 +456,16 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       isMiscRunning: false,
       miscStartTime: null,
       showMiscStopModal: false,
+    });
+    saveTimerState({
+      isRunning: false,
+      isPaused: false,
+      startTime: null,
+      pausedTime: 0,
+      currentActivity: '',
+      miscEnabled: false,
+      isMiscRunning: false,
+      miscStartTime: null,
     });
   },
 }));

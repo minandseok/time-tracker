@@ -19,6 +19,7 @@ export default function ActivityInput() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const justClickedSuggestionRef = useRef(false);
 
   // Existing activity list (recent first, deduplicated, excluding miscellaneous)
   const activities = useMemo(() => {
@@ -112,7 +113,12 @@ export default function ActivityInput() {
     setCurrentActivity(activity);
     setShowSuggestions(false);
     setSelectedIndex(-1);
+    justClickedSuggestionRef.current = true;
     inputRef.current?.focus();
+    // Reset flag after a short delay to allow normal focus behavior next time
+    setTimeout(() => {
+      justClickedSuggestionRef.current = false;
+    }, 100);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,6 +128,10 @@ export default function ActivityInput() {
   };
 
   const handleFocus = () => {
+    // Don't auto-open suggestions if user just clicked a suggestion
+    if (justClickedSuggestionRef.current) {
+      return;
+    }
     if (activities.length > 0) {
       setShowSuggestions(true);
     }
