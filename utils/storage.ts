@@ -15,7 +15,7 @@ export function loadRecords(): TimeRecord[] {
     if (saved) {
       const parsed = JSON.parse(saved);
       // Convert date strings back to Date objects
-      return parsed.map((record: any) => ({
+      return parsed.map((record: TimeRecord) => ({
         ...record,
         startTime: new Date(record.startTime),
         endTime: new Date(record.endTime),
@@ -83,7 +83,9 @@ export function loadTimerState(): {
         pausedTime: parsed.pausedTime,
         currentActivity: parsed.currentActivity,
         isMiscRunning: parsed.isMiscRunning,
-        miscStartTime: parsed.miscStartTime ? new Date(parsed.miscStartTime) : null,
+        miscStartTime: parsed.miscStartTime
+          ? new Date(parsed.miscStartTime)
+          : null,
         miscEnabled: parsed.miscEnabled,
       };
     }

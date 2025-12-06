@@ -54,18 +54,6 @@ export default function ActivityInput() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Prevent auto-open when timer stops (record button clicked)
-  const prevIsRunningRef = useRef(isRunning);
-  useEffect(() => {
-    if (prevIsRunningRef.current && !isRunning) {
-      // Timer just stopped - prevent auto-open for a moment
-      setPreventAutoOpen(true);
-      const timeout = setTimeout(() => setPreventAutoOpen(false), 500);
-      return () => clearTimeout(timeout);
-    }
-    prevIsRunningRef.current = isRunning;
-  }, [isRunning]);
-
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!showSuggestions || filteredSuggestions.length === 0) {
       if (
