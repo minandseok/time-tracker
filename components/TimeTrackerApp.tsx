@@ -25,7 +25,7 @@ export default function TimeTrackerApp() {
       <Header />
 
       {/* 타이머와 기록 */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6'>
+      <div className='grid grid-cols-1 gap-6 mb-6'>
         <TimerSection />
         <section className='bg-white rounded-[20px] p-10 shadow-lg border border-gray-100 h-[450px] flex flex-col'>
           <RecordsSection />

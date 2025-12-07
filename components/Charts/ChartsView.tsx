@@ -89,11 +89,11 @@ export default function ChartsView({type}: ChartsViewProps) {
   return (
     <div className='flex flex-col'>
       {/* Header with title and activity count */}
-      <div className='flex items-center justify-between mb-4'>
+      <div className='flex items-center justify-between flex-wrap gap-4 mb-4'>
         <h3 className='text-lg font-semibold text-gray-800'>
           활동별 시간 분포
         </h3>
-        <div className='flex items-center gap-4 text-sm'>
+        <div className='flex items-center gap-4 text-sm flex-wrap'>
           <div className='flex items-center gap-2'>
             <span className='text-gray-500'>총 활동 수:</span>
             <span className='font-bold text-blue-600'>
@@ -111,26 +111,36 @@ export default function ChartsView({type}: ChartsViewProps) {
       </div>
 
       {/* 바 차트 - 활동별 시간 */}
-      <div className='bg-white border border-gray-200 rounded-xl p-6'>
-        <ResponsiveContainer width='100%' height={400}>
-          <BarChart
-            data={barData}
-            margin={{top: 30, right: 20, left: 0, bottom: 5}}>
-            <CartesianGrid strokeDasharray='3 3' stroke='#e5e7eb' />
-            <XAxis dataKey='name' tick={{fontSize: 14}} angle={0} height={70} />
-            <YAxis
-              tick={{fontSize: 12}}
-              tickFormatter={(value) => `${Math.floor(value / 60)}분`}
-              ticks={Array.from(
-                {
-                  length:
-                    Math.floor(
-                      Math.max(...barData.map((d) => d.timeInSeconds)) / 60
-                    ) + 1,
-                },
-                (_, i) => i * 60
-              )}
-            />
+      <div className='bg-white border border-gray-200 rounded-xl p-3 sm:p-6 overflow-x-auto'>
+        <div className='min-w-[500px]'>
+          <ResponsiveContainer width='100%' height={350} minHeight={300}>
+            <BarChart
+              data={barData}
+              margin={{top: 20, right: 10, left: 0, bottom: 60}}>
+              <CartesianGrid strokeDasharray='3 3' stroke='#e5e7eb' />
+              <XAxis
+                dataKey='name'
+                tick={{fontSize: 12}}
+                angle={-45}
+                textAnchor='end'
+                height={80}
+                interval={0}
+              />
+              <YAxis
+                domain={[0, 'dataMax']}
+                tick={{fontSize: 11}}
+                tickFormatter={(value) => {
+                  const minutes = Math.floor(value / 60);
+                  const hours = Math.floor(minutes / 60);
+                  const remainingMinutes = minutes % 60;
+                  if (hours > 0) {
+                    return `${hours}시간${remainingMinutes > 0 ? remainingMinutes + '분' : ''}`;
+                  }
+                  return `${minutes}분`;
+                }}
+                allowDecimals={false}
+                width={70}
+              />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey='timeInSeconds' radius={[8, 8, 0, 0]}>
               {barData.map((entry) => (
@@ -162,7 +172,7 @@ export default function ChartsView({type}: ChartsViewProps) {
                         x={numX + numWidth / 2}
                         y={numY - 5}
                         fill='#6b7280'
-                        fontSize={11}
+                        fontSize={10}
                         fontWeight={600}
                         textAnchor='middle'>
                         {formatDuration(numValue)}
@@ -175,6 +185,7 @@ export default function ChartsView({type}: ChartsViewProps) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Activity list */}

@@ -71,11 +71,11 @@ export default function TimelineView() {
       </h3>
 
       {/* Block saturation legend + Time info */}
-      <div className='flex items-center justify-between mb-4'>
+      <div className='flex items-center justify-between flex-wrap gap-4 mb-4'>
         {/* Block saturation legend (left) */}
-        <div className='flex items-center gap-3 text-xs'>
+        <div className='flex items-center gap-3 text-xs flex-wrap'>
           <span className='text-gray-500 font-semibold'>블록 채도:</span>
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-2 flex-wrap'>
             <div className='flex items-center gap-1'>
               <div
                 className='w-3 h-3 bg-gray-900 rounded'
@@ -135,7 +135,7 @@ export default function TimelineView() {
         </div>
 
         {/* Time info (right) */}
-        <div className='flex items-center gap-4 text-sm'>
+        <div className='flex items-center gap-4 text-sm flex-wrap'>
           <div className='flex items-center gap-2'>
             <span className='text-gray-500'>시작 시간:</span>
             <span className='font-semibold text-blue-600'>
@@ -160,12 +160,13 @@ export default function TimelineView() {
       </div>
 
       {/* Timeline grid by time (chronological) */}
-      <div className='border border-gray-200 rounded-lg p-6 bg-white'>
+      <div className='border border-gray-200 rounded-lg p-3 sm:p-6 bg-white overflow-x-auto'>
         <div
           className='grid'
           style={{
-            gridTemplateColumns: `repeat(${CELLS_PER_ROW}, 1fr)`,
+            gridTemplateColumns: `repeat(${CELLS_PER_ROW}, minmax(8px, 1fr))`,
             gap: `${gap}px`,
+            minWidth: `${CELLS_PER_ROW * 11}px`, // 최소 너비 보장 (8px + 3px gap)
           }}>
           {timelineData.records.map((recordData, recordIndex) => {
             const cells = [];
@@ -190,6 +191,8 @@ export default function TimelineView() {
                       ? '0 0 0 3px rgba(59, 130, 246, 0.8)'
                       : 'none',
                     aspectRatio: '1 / 1',
+                    minWidth: '8px',
+                    minHeight: '8px',
                   }}>
                   <div className='absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none'>
                     <div className='bg-black bg-opacity-90 text-white text-xs px-3 py-2 rounded whitespace-nowrap text-center'>

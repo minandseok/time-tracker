@@ -98,11 +98,11 @@ const loadInitialState = () => {
     };
   }
   return {
-    isRunning: false,
-    isPaused: false,
-    startTime: null,
-    pausedTime: 0,
-    currentActivity: '',
+  isRunning: false,
+  isPaused: false,
+  startTime: null,
+  pausedTime: 0,
+  currentActivity: '',
     isMiscRunning: false,
     miscStartTime: null,
     miscEnabled: false,
