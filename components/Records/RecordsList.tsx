@@ -26,13 +26,13 @@ export default function RecordsList() {
       <div className='mb-4 shrink-0'>
         <div className='flex flex-wrap items-center gap-x-4 gap-y-2 text-sm'>
           <div className='flex items-center gap-2 whitespace-nowrap'>
-            <span className='text-gray-500'>전체 시간:</span>
+            <span className='text-gray-500'>전체 시간</span>
             <span className='font-bold text-blue-600 tabular-nums'>
               {formatDuration(totalTime)}
             </span>
             <span className='text-xs text-gray-400'>({totalCount}개)</span>
           </div>
-          <span className='text-gray-300 hidden sm:inline'>|</span>
+          <span className='text-gray-300 hidden sm:inline'>=</span>
           <div className='flex items-center gap-2 whitespace-nowrap'>
             <span className='text-gray-500'>집중 시간:</span>
             <span className='font-bold text-purple-600 tabular-nums'>
@@ -40,7 +40,7 @@ export default function RecordsList() {
             </span>
             <span className='text-xs text-gray-400'>({focusCount}개)</span>
           </div>
-          <span className='text-gray-300 hidden sm:inline'>|</span>
+          <span className='text-gray-300 hidden sm:inline'>+</span>
           <div className='flex items-center gap-2 whitespace-nowrap'>
             <span className='text-gray-500'>잡동사니 시간:</span>
             <span className='font-bold text-gray-600 tabular-nums'>
