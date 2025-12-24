@@ -38,11 +38,6 @@ export default function TimeTrackerApp() {
         <section className='bg-white rounded-[20px] p-10 shadow-lg border border-gray-100'>
           <ChartsView type='timeline' />
         </section>
-
-        {/* 통계 그래프 */}
-        <section className='bg-white rounded-[20px] p-10 shadow-lg border border-gray-100'>
-          <ChartsView type='stats' />
-        </section>
       </div>
 
       <DeleteModal />
